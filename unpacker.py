@@ -12,7 +12,7 @@ def unpack(f, dest_dir=None):
     fn = os.path.basename(f)
     bn, ext = os.path.splitext(fn)
 
-    if os.path.isdir(f) and ext == '.app':  # macOS projector.app bundle ?
+    if os.path.isdir(f) and ext == '.app':  # macOS projector.app bundle?
         fn_bin = os.path.join(f, 'Contents', 'MacOS', bn)
         bin_file = None
         if os.path.isdir(fn_bin):
@@ -29,7 +29,7 @@ def unpack(f, dest_dir=None):
             os.mkdir(output_dir)
             return unpack_projector(bin_file, output_dir)
 
-    elif ext == '.exe':  # Windows projector.exe ?
+    elif ext == '.exe':  # Windows projector.exe?
         print(f'Unpacking Windows projector "{fn}"...')
         output_dir = os.path.join(dest_dir if dest_dir else os.path.dirname(f), bn + '_contents')
         if os.path.isdir(output_dir):
@@ -37,7 +37,7 @@ def unpack(f, dest_dir=None):
         os.mkdir(output_dir)
         return unpack_projector(f, output_dir)
 
-    # check if it's an old Mac OS 9- 68k/PPC binary
+    # check if it's an old Mac OS 9- 68k/PPC/FAT binary
     with open(f, 'rb') as fh:
         magic = fh.read(4)
     is_macos_bin = magic[:2] == b'PJ' or magic[2:] == b'JP'
@@ -46,7 +46,6 @@ def unpack(f, dest_dir=None):
             b'Joy!',              # D10- mac projector
             b'\xCA\xFE\xBA\xBE',  # D11+ Projector Resource
             b'\xCE\xFA\xED\xFE',  # D11+ Projector Intel Resource
-#            b'RIFX'               # raw data fork of classic mac app
         ]
         for m in MAGIC_MACOS:
             if magic == m:
@@ -64,7 +63,6 @@ def unpack(f, dest_dir=None):
 
 def unpack_projector (exe_file, output_dir):
     with open(exe_file, 'rb') as fh:
-#        fh.seek(offset)
         data_full = fh.read()
 
     m1 = re.search(b'RIFX([\x00-\xFF]{4})APPL', data_full)
@@ -218,12 +216,13 @@ def unpack_projector (exe_file, output_dir):
 def get_filename(fn):
     ''' cross-platform, extracts filename of Windows, POSIX or Mac OS path '''
     if "/" in fn:
-        pd = "/"  # macOS/Mac OS X
+        pd = "/"  # POSIX (macOS/Mac OS X)
     elif "\\" in fn:
         pd = "\\"  # Windows
     else:
-        pd = ":"  # Mac OS 9-
+        pd = ":"  # Mac OS
     return fn.split(pd)[-1]
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
