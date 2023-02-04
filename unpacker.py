@@ -123,7 +123,7 @@ def unpack_projector (exe_file, output_dir):
             int.to_bytes(24, 4, byteorder) +
             int.to_bytes(1, 4, byteorder))
 
-    # extract file names from DICT
+    # extract file names from Dict chunk
     dir_names = []
     x32_names = []
 
@@ -144,19 +144,15 @@ def unpack_projector (exe_file, output_dir):
 
         if cnt == 1:
             dir_names.append('main.dxr')  # finding original filename would require parsing .dir file
-
         else:
             pt = cnt * 8 + 64
             for i in range(cnt):
                 flen = int.from_bytes(dict[pt:pt+4], byteorder)
                 fn = dict[pt + 4:pt + 4 + flen]
-#                print(fn)
-
                 if b'Xtras:' in fn or fn.endswith(b' Xtra') or fn.endswith(b'.x32') or fn.endswith(b'.cpio'):
                     x32_names.append(get_filename(fn.decode()))
                 else:
                     dir_names.append(get_filename(fn.decode()))
-
                 if i < cnt - 1:
                     pt += 4 + flen + (4 - flen % 4 if flen % 4 else 0)
 
@@ -170,8 +166,8 @@ def unpack_projector (exe_file, output_dir):
             file_num += 1
 
             _, ext = os.path.splitext(fn)
-            if ext == '':  # just guessing
-                fn += '.dcr'
+            if ext == '':
+                fn += '.dcr'  # just guessing
             else:
                 fn = fn[:-4] + ('.cct' if ext == '.cst' else '.dcr')
 
