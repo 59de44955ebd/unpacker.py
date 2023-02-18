@@ -14,7 +14,7 @@ if __name__ == '__main__':
     test_files = list(os.listdir(os.path.join(PATH, 'test_files')))
     for fn in test_files:
         try:
-            unpack(os.path.join(PATH, 'test_files', fn), dest_dir)
+            unpack(os.path.join(PATH, 'test_files', fn), dest_dir=dest_dir, do_decompile=True)
         except Exception as e:
             print('[ERROR]', e)
         print()

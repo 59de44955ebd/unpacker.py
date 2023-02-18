@@ -5,9 +5,11 @@ import sys
 import zlib
 
 
-def unpack(f, dest_dir=None):
+def unpack(f, dest_dir=None, do_decompile=False):
     if not os.path.exists(f):
         return print('Error: file does not exist.')
+
+    os.environ['PATH'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bin', sys.platform) + os.pathsep + os.environ['PATH']
 
     fn = os.path.basename(f)
     bn, ext = os.path.splitext(fn)
@@ -27,7 +29,7 @@ def unpack(f, dest_dir=None):
             if os.path.isdir(output_dir):
                 shutil.rmtree(output_dir)
             os.mkdir(output_dir)
-            return unpack_projector(bin_file, output_dir)
+            return unpack_projector(bin_file, output_dir, do_decompile)
 
     elif ext == '.exe':  # Windows projector.exe?
         print(f'Unpacking Windows projector "{fn}"...')
@@ -35,7 +37,7 @@ def unpack(f, dest_dir=None):
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir)
         os.mkdir(output_dir)
-        return unpack_projector(f, output_dir)
+        return unpack_projector(f, output_dir, do_decompile)
 
     # check if it's an old Mac OS 9- 68k/PPC/FAT binary
     with open(f, 'rb') as fh:
@@ -57,11 +59,11 @@ def unpack(f, dest_dir=None):
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir)
         os.mkdir(output_dir)
-        return unpack_projector(f, output_dir)
+        return unpack_projector(f, output_dir, do_decompile)
 
     print('Error: File not supported.')
 
-def unpack_projector (exe_file, output_dir):
+def unpack_projector (exe_file, output_dir, do_decompile=False):
     with open(exe_file, 'rb') as fh:
         data_full = fh.read()
 
@@ -172,8 +174,14 @@ def unpack_projector (exe_file, output_dir):
                 fn = fn[:-4] + ('.cct' if ext == '.cst' else '.dcr')
 
             chunk_size = int.from_bytes(data[pos + 4:pos + 8], byteorder)
-            with open(os.path.join(output_dir, fn), 'wb') as fh:
+
+            fn = os.path.join(output_dir, sanitize_filename(fn))
+            with open(fn, 'wb') as fh:
                 fh.write(data[pos:pos + chunk_size + 8])
+
+            if do_decompile:
+                decompile(fn)
+            rebuild(fn)
 
     else:  # non-compressed files
         print('Notice: files in projector are not compressed.')
@@ -190,11 +198,16 @@ def unpack_projector (exe_file, output_dir):
             else:
                 fn = fn[:-4] + ('.cxt' if ext == '.cst' else '.dxr')
 
-            with open(os.path.join(output_dir, fn), 'wb') as fh:
+            fn = os.path.join(output_dir, sanitize_filename(fn))
+            with open(fn, 'wb') as fh:
                 fh.write(header)
                 fh.write(int.to_bytes(start_pos + pos + 12, 4, byteorder))
                 fh.write(int.to_bytes(1923, 4, byteorder))
                 fh.write(data_full)
+
+            if do_decompile:
+                decompile(fn)
+            rebuild(fn)
 
     # extract xtras
     file_num = 0
@@ -204,10 +217,22 @@ def unpack_projector (exe_file, output_dir):
         fn = x32_names[file_num]
         file_num += 1
         xdata = zlib.decompress(xdata)
-        with open(os.path.join(output_dir, fn), 'wb') as fh:
+        with open(os.path.join(output_dir, sanitize_filename(fn)), 'wb') as fh:
             fh.write(xdata)
 
     print(f'Done. {len(res) + len(xres)} files were extracted to "{output_dir}".')
+
+def rebuild(fn):
+    dest_file = fn + '.tmp'
+    os.system(f'ProjectorRays --rebuild-only "{fn}" "{dest_file}"')
+    if os.path.isfile(dest_file):
+        os.unlink(fn)
+        os.rename(dest_file, fn)
+
+def decompile(fn):
+    dest_file, ext = os.path.splitext(fn)
+    dest_file += ('_decompiled.cst' if ext == '.cxt' or ext == '.cct' else '_decompiled.dir')
+    os.system(f'ProjectorRays "{fn}" "{dest_file}"')
 
 def get_filename(fn):
     ''' cross-platform, extracts filename of Windows, POSIX or Mac OS path '''
@@ -219,9 +244,18 @@ def get_filename(fn):
         pd = ":"  # Mac OS
     return fn.split(pd)[-1]
 
+def sanitize_filename(fn):
+    for c in r'\/:*?"<>|':
+	    fn = fn.replace(c, '_')
+    return fn
+
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        unpack(sys.argv[1])
+    args = sys.argv[1:]
+    do_decompile = '-decompile' in args
+    if do_decompile:
+        args.remove('-decompile')
+    if len(args):
+        unpack(args[0], do_decompile=do_decompile)
     else:
-        print('Usage: python unpacker.py <projector-file>')
+        print('Usage: python unpacker.py [-decompile] <projector-file>')
