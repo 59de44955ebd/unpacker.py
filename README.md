@@ -13,7 +13,7 @@ It supports Director versions 4 to 12 and the following flavors:
 ## Usage
 
 ```
-$ python unpacker.py <projector-file>
+$ python unpacker.py [-decompile] <projector-file>
 ```
 
 ## Tests
