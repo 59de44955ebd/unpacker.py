@@ -4,6 +4,7 @@ import shutil
 import sys
 import zlib
 
+DEV_NULL = 'nul' if sys.platform == 'win32' else '/dev/null'
 
 def unpack(f, dest_dir=None, do_decompile=False):
     if not os.path.exists(f):
@@ -48,6 +49,7 @@ def unpack(f, dest_dir=None, do_decompile=False):
             b'Joy!',              # D10- mac projector
             b'\xCA\xFE\xBA\xBE',  # D11+ Projector Resource
             b'\xCE\xFA\xED\xFE',  # D11+ Projector Intel Resource
+            b'RIFX'               # data fork of classic mac app
         ]
         for m in MAGIC_MACOS:
             if magic == m:
@@ -224,7 +226,7 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
 
 def rebuild(fn):
     dest_file = fn + '.tmp'
-    os.system(f'ProjectorRays --rebuild-only "{fn}" "{dest_file}"')
+    os.system(f'ProjectorRays --rebuild-only "{fn}" "{dest_file}" >{DEV_NULL}')
     if os.path.isfile(dest_file):
         os.unlink(fn)
         os.rename(dest_file, fn)
@@ -232,7 +234,7 @@ def rebuild(fn):
 def decompile(fn):
     dest_file, ext = os.path.splitext(fn)
     dest_file += ('_decompiled.cst' if ext == '.cxt' or ext == '.cct' else '_decompiled.dir')
-    os.system(f'ProjectorRays "{fn}" "{dest_file}"')
+    os.system(f'ProjectorRays "{fn}" "{dest_file}" >{DEV_NULL}')
 
 def get_filename(fn):
     ''' cross-platform, extracts filename of Windows, POSIX or Mac OS path '''
