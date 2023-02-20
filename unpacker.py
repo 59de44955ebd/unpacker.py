@@ -147,7 +147,9 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
             cnt = int.from_bytes(dict[24:28], 'little' if byteorder == 'big' else 'big')
 
         if cnt == 1:
-            dir_names.append('main.dxr')  # finding original filename would require parsing .dir file
+            # finding actual original filename would require parsing .dir file, so we use the projector name instead
+            bn, _ = os.path.splitext(os.path.basename(exe_file))
+            dir_names.append(bn + '.dxr')
         else:
             pt = cnt * 8 + 64
             for i in range(cnt):
