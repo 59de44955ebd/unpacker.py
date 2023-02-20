@@ -28,4 +28,4 @@ will unpack the 27 example projectors found in "test_files" to a new folder "tes
 
 ## Notes
 
-Director movies and castlibs extracted from projectors are always protected/compressed. You can try to decompile such files with [ProjectorRays](https://github.com/ProjectorRays/ProjectorRays) to turn them into editable files that can be opened and edited in Director.
+Director movies and castlibs extracted from projectors are always protected/compressed. If you pass "-decompile" as argument, the script will try to decompile/unprotect them using [ProjectorRays](https://github.com/ProjectorRays/ProjectorRays), binaries for macOS/Windows/Linux are included. The resulting files with suffix "_decompiled" can then be opened and edited in Director.
