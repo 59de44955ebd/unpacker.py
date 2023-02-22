@@ -10,6 +10,18 @@ It supports Director versions 4 to 12 and the following flavors:
 * Mac OS X projectors (Intel/PPC/Universal)
 * macOS projectors (.app bundle, Intel)
 
+## Setup
+
+macOS:
+```
+$ chmod +x bin/darwin/ProjectorRays
+```
+
+Linux:
+```
+$ chmod +x bin/linux/ProjectorRays
+```
+
 ## Usage
 
 ```
@@ -24,7 +36,7 @@ Running
 $ python tests.py
 ```
 
-will unpack the 27 example projectors found in "test_files" to a new folder "test_files_unpacked".
+will unpack the 29 example projectors found in "test_files" to a new folder "test_files_unpacked".
 
 ## Notes
 
