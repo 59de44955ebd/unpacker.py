@@ -15,6 +15,7 @@ def unpack(f, dest_dir=None, do_decompile=False):
 
     fn = os.path.basename(f)
     bn, ext = os.path.splitext(fn)
+    ext = ext.lower()
 
     if os.path.isdir(f) and ext == '.app':  # macOS projector.app bundle?
         fn_bin = os.path.join(f, 'Contents', 'MacOS', bn)
@@ -185,6 +186,8 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
             file_num += 1
 
             _, ext = os.path.splitext(fn)
+            ext = ext.lower()
+
             if ext == '':
                 fn += '.dcr'  # just guessing
             else:
@@ -210,6 +213,7 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
             file_num += 1
 
             _, ext = os.path.splitext(fn)
+            ext = ext.lower()
             if ext == '':  # just guessing
                 fn += '.dxr'
             else:
@@ -258,12 +262,13 @@ def rebuild(fn):
     exit_code = os.system(f'ProjectorRays --rebuild-only "{fn}" "{dest_file}" >{DEV_NULL}')
     if exit_code != 0:
         raise(OSError('Rebuilding failed'))
-    if os.path.isfile(dest_file):
-        os.unlink(fn)
-        os.rename(dest_file, fn)
+#    if os.path.isfile(dest_file):
+#        os.unlink(fn)
+#        os.rename(dest_file, fn)
 
 def decompile(fn):
     dest_file, ext = os.path.splitext(fn)
+    ext = ext.lower()
     dest_file += ('_decompiled.cst' if ext == '.cxt' or ext == '.cct' else '_decompiled.dir')
     exit_code = os.system(f'ProjectorRays "{fn}" "{dest_file}" >{DEV_NULL}')
     if exit_code != 0:
@@ -287,11 +292,18 @@ def sanitize_filename(fn):
 
 if __name__ == '__main__':
     args = sys.argv[1:]
+
+    verbose = '-verbose' in args
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        args.remove('-verbose')
+
     do_decompile = '-decompile' in args
     if do_decompile:
         args.remove('-decompile')
+
     if len(args):
         output_dir, num_dirs, num_xtras = unpack(args[0], do_decompile=do_decompile)
         print(f'Done. {num_dirs+num_xtras} files were extracted to "{output_dir}".')
     else:
-        print('Usage: python unpacker.py [-decompile] <projector-file>')
+        print('Usage: python unpacker.py [-verbose] [-decompile] <projector-file>')
