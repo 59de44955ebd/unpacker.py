@@ -141,7 +141,7 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
     dir_names = []
     xtra_names = []
 
-    pos = res[0][0]  # position of first XFIR/RIFX
+    pos = res[0][0]  # position of first XFIR/RIFX chunk
 
     # find last 'Dict' (littleEndian: 'tciD') before this position
     m = None
@@ -156,7 +156,7 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
         offset_dict = 0
 
         if cnt > 0xFFFF:  # 16-bit win projector
-            byteorder_dict = 'big' #'little' if byteorder == 'big' else 'big'
+            byteorder_dict = 'big'
             cnt = int.from_bytes(dict[24:28], byteorder_dict)
             offset_dict = 2
 
@@ -247,7 +247,7 @@ def unpack_projector (exe_file, output_dir, do_decompile=False):
                 fh.write(xdata)
     else:
         for pos in xres:
-            chunk_size = int.from_bytes(data[pos:pos+4], 'big')  # always bigEndian!
+            chunk_size = int.from_bytes(data[pos:pos+4], 'big')  # always big endian
             xdata = data[pos + 48:pos + 48 + chunk_size]
             fn = xtra_names[file_num]
             file_num += 1
@@ -262,9 +262,9 @@ def rebuild(fn):
     exit_code = os.system(f'ProjectorRays --rebuild-only "{fn}" "{dest_file}" >{DEV_NULL}')
     if exit_code != 0:
         raise(OSError('Rebuilding failed'))
-#    if os.path.isfile(dest_file):
-#        os.unlink(fn)
-#        os.rename(dest_file, fn)
+    if os.path.isfile(dest_file):
+        os.unlink(fn)
+        os.rename(dest_file, fn)
 
 def decompile(fn):
     dest_file, ext = os.path.splitext(fn)
@@ -281,7 +281,7 @@ def get_filename(fn):
     elif "\\" in fn:
         pd = "\\"  # Windows
     else:
-        pd = ":"  # Mac OS
+        pd = ":"  # classic Mac OS
     return fn.split(pd)[-1]
 
 def sanitize_filename(fn):
@@ -295,7 +295,7 @@ if __name__ == '__main__':
 
     verbose = '-verbose' in args
     if verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level = logging.INFO, format = '[%(levelname)s] %(message)s')
         args.remove('-verbose')
 
     do_decompile = '-decompile' in args
